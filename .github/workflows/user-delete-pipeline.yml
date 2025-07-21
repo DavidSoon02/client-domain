@@ -28,10 +28,10 @@ jobs:
           password: ${{ secrets.DOCKER_PASSWORD }}
 
       - name: Build Docker image
-        run: docker buildx build -t ${{ secrets.DOCKER_USERNAME }}/${{ secrets.DOCKER_IMAGE_DELETE_USER }}:latest ./delete-service
+        run: docker buildx build -t ${{ secrets.DOCKER_USERNAME }}/${{ secrets.DOCKER_IMAGE_DELETE }}:latest ./delete-service
 
       - name: Push Docker image to Dockerhub
-        run: docker push ${{ secrets.DOCKER_USERNAME }}/${{ secrets.DOCKER_IMAGE_DELETE_USER }}:latest
+        run: docker push ${{ secrets.DOCKER_USERNAME }}/${{ secrets.DOCKER_IMAGE_DELETE }}:latest
 
   deploy-to-ec2-instance:
     needs: build-and-push-docker
@@ -45,9 +45,9 @@ jobs:
           key: ${{ secrets.EC2_PRIVATE_KEY }}
           script: |
             echo "Pull, stop, and redeploy the Docker container"
-            docker pull ${{ secrets.DOCKER_USERNAME }}/${{ secrets.DOCKER_IMAGE_DELETE_USER }}:latest
-            docker stop ${{ secrets.DOCKER_IMAGE_DELETE_USER }} || true
-            docker rm ${{ secrets.DOCKER_IMAGE_DELETE_USER }} || true
+            docker pull ${{ secrets.DOCKER_USERNAME }}/${{ secrets.DOCKER_IMAGE_DELETE }}:latest
+            docker stop ${{ secrets.DOCKER_IMAGE_DELETE }} || true
+            docker rm ${{ secrets.DOCKER_IMAGE_DELETE }} || true
             docker run --restart always \
                        -e DATABASE_URL=${{ secrets.DATABASE_URL }} \
                        -e JWT_SECRET=${{ secrets.JWT_SECRET }} \
@@ -55,6 +55,6 @@ jobs:
                        -e BCRYPT_ROUNDS=${{ secrets.BCRYPT_ROUNDS }} \
                        -e PORT=${{ secrets.DELETE_SERVICE_PORT }} \
                        -e HOST=${{ secrets.HOST }} \
-                       -d --name ${{ secrets.DOCKER_IMAGE_DELETE_USER }} \
+                       -d --name ${{ secrets.DOCKER_IMAGE_DELETE }} \
                        -p ${{ secrets.DELETE_SERVICE_PORT }}:${{ secrets.DELETE_SERVICE_PORT }} \
-                       ${{ secrets.DOCKER_USERNAME }}/${{ secrets.DOCKER_IMAGE_DELETE_USER }}:latest
+                       ${{ secrets.DOCKER_USERNAME }}/${{ secrets.DOCKER_IMAGE_DELETE }}:latest
